@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+  <html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<!--   <link
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css"
+  rel="stylesheet"
+/> -->
+  <link href="https://use.fontawesome.com/releases/v5.8.2/css/all.css" rel="stylesheet">
+  
+  <th:block th:replace="${customStyle} ?: ~{}"> </th:block>
+  <title>Demo</title>
+</head>
+<body>
+<h1>main-layout</h1>
+<p>Trang chủ</p>
+<p id="noti"></p>
+</body>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/3.10.1/mdb.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.22.0/axios.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/js-loading-overlay@1.1.0/dist/js-loading-overlay.min.js"></script>
+<script src="https://cdn.ckeditor.com/ckeditor5/30.0.0/classic/ckeditor.js"></script>
+<!--  // <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script> -->
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.1.1/firebase-app.js";
+import { getAnalytics } from  "https://www.gstatic.com/firebasejs/9.1.1/firebase-analytics.js";
+import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/9.1.1/firebase-messaging.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCGNHhyLLqblrMK3R6uEKUHxQWl15SQv8k",
+  authDomain: "fir-demo-30d0e.firebaseapp.com",
+  projectId: "fir-demo-30d0e",
+  storageBucket: "fir-demo-30d0e.appspot.com",
+  messagingSenderId: "681205052992",
+  appId: "1:681205052992:web:f97de6fa70ef2f0c20d1a5",
+  measurementId: "G-NQT1FDMEFE",
+};
+
+
+const vapidKey = "BLmbMJSHL70RSBCwrmeyXMs5_p1fYUzdGgRSANRn8ibfwQC1XJlICEDPB7s2dDsG6dPdmZ9SGEyp2p_wZ-0XFjY";
+
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+
+// Get registration token. Initially this makes a network call, once retrieved
+// subsequent calls to getToken will return from cache.
+const messaging = getMessaging(app);
+
+
+//yêu cầu người dùng cấp quyền thông báo, nếu được phép thì lấy token gửi về server
+getToken(messaging,{ vapidKey: vapidKey}).then( async (currentToken) => {
+
+    console.log(currentToken);
+
+    if(currentToken){
+
+      let deviceInfoData = await axios.get('http://ip-api.com/json');
+
+      console.log(deviceInfoData);
+
+      let data = {
+        token: currentToken,
+        deviceInfo: JSON.stringify(deviceInfoData.data)
+      };
+
+      try{
+        const configs = {header:{'Content-Type':'application/json'}};
+        let result = await axios.put('/api/register-token',data,configs)
+        console.log(result);
+      }catch(e){
+        console.log(e);
+      }
+
+    }else{
+      Notification.requestPermission().then((permission)=>{
+        if (permission=='granted') {
+          console.log('Notification permission granted.');
+        } else{
+          console.log('unable to get permission to notify');
+        }
+      });
+      console.log('No registration token avalible. Request permision to generate one');
+    }
+  }).catch((err)=>{
+
+  console.log('Loi xuat hien khi lay token', err);
+
+  });
+
+
+//xử lý thông báo khi ứng dụng còn đang chạy or ở chế độ nền
+    onMessage(messaging,(payload)=>{
+      console.log('message recived ', payload);
+
+      Swal.fire({
+        icon: 'info',
+        title: payload.data.title,
+        text: payload.data.content,
+        toast: true,
+        showCloseButton: true,
+        position:'bottom-right',
+        showConfirmButton:false,
+        timer: 3000,
+        timerProgressBar: true,
+        didOpen:(toast)=>{
+          toast.addEventListener('mouseenter', Swal.stopTimer)
+          toast.addEventListener('mouseleave', Swal.resumeTimer)
+          toast.onclick = ()=>{
+            window.open(payload.data.link);
+          }
+        }
+      });
+    });
+    
+</script>
+
+</html>
