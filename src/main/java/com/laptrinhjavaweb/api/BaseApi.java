@@ -28,6 +28,7 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api")
 public class BaseApi {
 
+	//test
 	private final FirebaseService firebaseService;
 	
 	private final SendMailService sendMailService;
