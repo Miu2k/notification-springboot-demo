@@ -10,20 +10,16 @@ public class Test1Controller {
 
     @GetMapping("/123")
     public String index(Model model) {
-        model.addAttribute("title", "Trang chủ");
-        return "index";
-    }
-
-    @GetMapping("/send-notification123")
-    public String sendNotiPage(Model model) {
         model.addAttribute("title", "Gửi thông báo");
         return "send-notification";
     }
 
-    @GetMapping("/send-mail123")
-    public String sendMail(Model model) {
+    @GetMapping("/send-notification123")
+    public String sendNotiPage(Model model) {
         model.addAttribute("title","Gửi mail");
         return "mail";
     }
+
+
 }
 
